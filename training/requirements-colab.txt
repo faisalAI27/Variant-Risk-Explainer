@@ -1,6 +1,7 @@
 accelerate>=0.30.0
 biopython>=1.83
 datasets>=2.19.0
+einops>=0.8.0
 evaluate>=0.4.2
 numpy>=1.26.0
 pandas>=2.2.0

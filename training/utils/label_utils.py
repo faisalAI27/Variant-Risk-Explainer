@@ -6,10 +6,15 @@ from urllib.parse import unquote
 
 
 DROP_LABEL_TERMS = (
+    "conflicting",
     "conflicting interpretations",
+    "conflicting classifications",
+    "uncertain",
     "uncertain significance",
+    "risk",
     "risk factor",
     "association",
+    "drug",
     "drug response",
     "protective",
     "not provided",
