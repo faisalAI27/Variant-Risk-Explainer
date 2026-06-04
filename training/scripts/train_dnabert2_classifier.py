@@ -57,6 +57,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--learning-rate", type=float, default=2e-5)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--logging-steps", type=int, default=10)
+    parser.add_argument("--max-train-samples", type=int, default=0, help="Optional cap for quick smoke tests. 0 means all rows.")
+    parser.add_argument("--max-val-samples", type=int, default=0, help="Optional cap for quick smoke tests. 0 means all rows.")
+    parser.add_argument("--max-test-samples", type=int, default=0, help="Optional cap for quick smoke tests. 0 means all rows.")
+    parser.add_argument("--max-steps", type=int, default=0, help="Optional Trainer max_steps for smoke tests. 0 means disabled.")
+    parser.add_argument("--force-cpu", action="store_true", help="Force CPU training even when a GPU is visible.")
     parser.add_argument("--no-clean-clnsig", action="store_true", help="Do not re-filter CLNSIG labels in CSV inputs.")
     return parser.parse_args()
 
@@ -196,6 +202,15 @@ def compute_metrics(eval_pred):
     }
 
 
+def limit_dataset(dataset: Dataset, max_samples: int, split_name: str, seed: int) -> Dataset:
+    """Optionally limit a dataset for fast CPU smoke tests."""
+    if max_samples <= 0 or len(dataset) <= max_samples:
+        return dataset
+    limited = dataset.shuffle(seed=seed).select(range(max_samples))
+    print(f"{split_name}: using {len(limited):,}/{len(dataset):,} rows for this run")
+    return limited
+
+
 def build_training_args(args: argparse.Namespace, output_dir: Path) -> TrainingArguments:
     kwargs = {
         "output_dir": str(output_dir / "checkpoints"),
@@ -212,6 +227,25 @@ def build_training_args(args: argparse.Namespace, output_dir: Path) -> TrainingA
     }
 
     signature = inspect.signature(TrainingArguments.__init__)
+    optional_kwargs = {
+        "disable_tqdm": False,
+        "logging_strategy": "steps",
+        "logging_steps": args.logging_steps,
+        "logging_first_step": True,
+        "save_total_limit": 2,
+    }
+    if args.max_steps > 0:
+        optional_kwargs["max_steps"] = args.max_steps
+    if args.force_cpu:
+        if "use_cpu" in signature.parameters:
+            optional_kwargs["use_cpu"] = True
+        elif "no_cuda" in signature.parameters:
+            optional_kwargs["no_cuda"] = True
+
+    for key, value in optional_kwargs.items():
+        if key in signature.parameters:
+            kwargs[key] = value
+
     if "eval_strategy" in signature.parameters:
         kwargs["eval_strategy"] = "epoch"
     else:
@@ -243,6 +277,10 @@ def main() -> None:
         dataset_source = {"dataset_jsonl": args.dataset_jsonl}
     else:
         raise ValueError("Provide either --dataset-jsonl or all of --train-csv, --val-csv, and --test-csv.")
+
+    train_dataset = limit_dataset(train_dataset, args.max_train_samples, "train", args.seed)
+    eval_dataset = limit_dataset(eval_dataset, args.max_val_samples, "val", args.seed)
+    test_dataset = limit_dataset(test_dataset, args.max_test_samples, "test", args.seed)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, trust_remote_code=True)
 

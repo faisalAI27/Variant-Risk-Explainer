@@ -2,10 +2,12 @@
 .env
 .env.*
 !.env.example
+.env.local
 
 # Python
 __pycache__/
 *.py[cod]
+*.pyc
 *.pyo
 *.pyd
 .Python
@@ -39,6 +41,7 @@ drive/
 wandb/
 lightning_logs/
 runs/
+checkpoints/
 
 # Genomics data and model artifacts
 data/raw/
@@ -67,6 +70,19 @@ outputs/
 artifacts/
 training/data/
 training/output/
+training/outputs/
+training/cache/
+training/data_cache/
+training/csv_files_large/
+training/csv_files_large_alt/
+training/csv_files_10k/
+training/csv_files_10k_alt/
+training/csv_files_20k/
+training/csv_files_20k_alt/
+training/local_dnabert2_patch/
+*.zip
+*.safetensors
+*.bin
 
 # OS/editor
 .DS_Store
