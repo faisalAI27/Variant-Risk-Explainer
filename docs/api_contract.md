@@ -12,17 +12,21 @@ http://localhost:8000
 GET /health
 ```
 
-### Response
+Example response:
 
 ```json
 {
   "status": "ok",
-  "service": "variant-risk-explainer",
-  "model_mode": "mock"
+  "model_loaded": true,
+  "device": "mps",
+  "model_dir": "../training/training_model_files",
+  "threshold": 0.16,
+  "model_name": "DNABERT-2 ClinVar 20k",
+  "load_error": null
 }
 ```
 
-## Analyze Variant
+## Analyze Variant Sequence
 
 ```http
 POST /analyze
@@ -33,70 +37,64 @@ Content-Type: application/json
 
 ```json
 {
-  "chromosome": "7",
-  "position": 140753336,
-  "reference": "A",
-  "alternate": "T",
-  "gene": "BRAF",
-  "sequence_context": "ACGTACGTACGT"
+  "sequence": "ACGTACGTACGTACGT",
+  "variant_name": "Demo Variant A",
+  "gene": "BRCA1",
+  "notes": "Synthetic demo request"
 }
 ```
 
-### Fields
+### Request Fields
 
-- `chromosome`: GRCh38 chromosome name. Accepts `1` through `22`, `X`, `Y`, `MT`, and optional `chr` prefix.
-- `position`: 1-based GRCh38 genomic coordinate.
-- `reference`: reference allele using `A`, `C`, `G`, `T`, or `N`.
-- `alternate`: alternate allele using `A`, `C`, `G`, `T`, or `N`.
-- `gene`: optional gene symbol for display and explanation context.
-- `sequence_context`: optional GRCh38 sequence context around the variant.
+- `sequence`: required DNA sequence using only `A`, `C`, `G`, `T`, or `N`.
+- `variant_name`: optional display name.
+- `gene`: optional gene symbol for display/explanation context.
+- `notes`: optional demo notes.
 
 ### Response Body
 
 ```json
 {
-  "request_id": "0e7c3d55-6f46-4c19-a1fd-860bc4f8a88d",
-  "submitted_at": "2026-06-04T10:00:00Z",
-  "input": {
-    "chromosome": "7",
-    "position": 140753336,
-    "reference": "A",
-    "alternate": "T",
-    "gene": "BRAF",
-    "sequence_context": "ACGTACGTACGT"
-  },
-  "grch_build": "GRCh38",
-  "risk_label": "uncertain",
-  "confidence": 0.54,
-  "model_mode": "mock",
-  "explanation": "Mock mode produced a deterministic research-only score from variant features. No clinical meaning should be inferred.",
+  "variant_name": "Demo Variant A",
+  "gene": "BRCA1",
+  "prediction_class": 1,
+  "prediction_label": "Pathogenic / Likely pathogenic",
+  "risk_level": "Elevated",
+  "benign_probability": 0.671463,
+  "pathogenic_probability": 0.328537,
+  "threshold": 0.16,
+  "model_name": "DNABERT-2 ClinVar 20k",
+  "sequence_length_used": 64,
+  "explanation": "The model estimated...",
+  "explanation_source": "openai",
+  "confidence_level": "Low model confidence",
+  "recommendation": "This result is for research/demo use only...",
   "limitations": [
-    "Research demo only.",
-    "Not validated for diagnosis or treatment decisions.",
-    "ClinVar labels may be incomplete, conflicting, or biased."
+    "The model uses DNA sequence patterns and does not replace clinical interpretation.",
+    "The model performance is limited, with test AUC around 0.5928.",
+    "The prediction does not include full clinical evidence, family history, population frequency, or functional studies.",
+    "The result should not be used for diagnosis or treatment decisions."
   ],
-  "disclaimer": "For research and education only. Not for medical diagnosis."
+  "disclaimer": "Research/demo use only. This model is not a clinical diagnostic system and must not be used for medical decisions."
 }
 ```
 
-### Risk Labels
+### Explanation Sources
 
-- `likely_benign`
-- `uncertain`
-- `likely_pathogenic`
-
-These labels are demo categories only and are not clinical classifications.
+- `openai`: OpenAI successfully rewrote the explanation paragraph.
+- `rule-based`: local rule-based explanation was used because AI explanation is disabled.
+- `rule-based-fallback`: AI explanation was enabled, but the key was missing or the OpenAI request failed.
 
 ### Error Example
 
+Invalid DNA characters return a clear error:
+
 ```json
 {
-  "detail": [
-    {
-      "type": "value_error",
-      "loc": ["body", "position"],
-      "msg": "Value error, position must be a positive GRCh38 coordinate"
-    }
-  ]
+  "detail": "sequence contains invalid DNA characters: XZ"
 }
 ```
+
+## Safety Boundary
+
+All outputs are research/demo outputs only. They are not clinical classifications and must not be used for diagnosis, treatment, or medical decision-making.

@@ -68,11 +68,12 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8001
 5. Click `Analyze Variant`.
 
 The result card shows benign/pathogenic probabilities, threshold, model name,
-sequence length used after center cropping, and a beginner-friendly explanation.
+sequence length used after center cropping, a beginner-friendly explanation, and
+the explanation source.
 
 The explanation is generated from the backend model output and threshold. It is
 not medical advice and is not a clinical interpretation. If the backend has
-`USE_OPENAI_EXPLANATION=true`, the backend may use OpenAI to improve the
+`USE_AI_EXPLANATION=true`, the backend may use OpenAI to improve the
 explanation paragraph. Do not put the OpenAI API key in the frontend; keep it in
 `backend/.env` only.
 

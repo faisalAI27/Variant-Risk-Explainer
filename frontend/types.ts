@@ -17,6 +17,7 @@ export type AnalyzeResponse = {
   model_name: string;
   sequence_length_used: number;
   explanation: string;
+  explanation_source: "rule-based" | "openai" | "rule-based-fallback" | string;
   confidence_level: string;
   recommendation: string;
   limitations: string[];

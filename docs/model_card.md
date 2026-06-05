@@ -28,10 +28,10 @@ GRCh38 is used consistently for ClinVar coordinates and reference sequence extra
 
 The pipeline prepares examples from ClinVar GRCh38 VCF records. It focuses on single nucleotide variants with clinical significance labels that can be mapped into binary or compact research classes.
 
-Example label mapping:
+Final label mapping:
 
-- `Pathogenic` and `Likely_pathogenic` -> `likely_pathogenic`
-- `Benign` and `Likely_benign` -> `likely_benign`
+- `Pathogenic` and `Likely_pathogenic` -> `1`
+- `Benign` and `Likely_benign` -> `0`
 - conflicting, uncertain, or unsupported labels -> skipped or held out depending on notebook settings
 
 ## Inputs
@@ -40,22 +40,31 @@ The model receives sequence windows centered on a submitted variant. The demo sc
 
 ## Outputs
 
-The backend maps model scores into demo labels:
+The backend maps model probabilities into demo labels:
 
-- `likely_benign`
-- `uncertain`
-- `likely_pathogenic`
+- `0`: Benign / Likely benign
+- `1`: Pathogenic / Likely pathogenic
+
+The current research threshold for class `1` is `0.16`.
 
 ## Evaluation
 
-Recommended evaluation:
+Final confirmed 20k alternate-sequence evaluation:
 
-- Stratified train, validation, and test splits.
-- Accuracy, precision, recall, F1, ROC-AUC where appropriate.
-- Confusion matrix.
-- Per-class metrics.
-- Label distribution audit.
-- Gene and chromosome holdout experiments for stronger leakage checks.
+- Accuracy: `0.5537`
+- Precision: `0.5384`
+- Recall: `0.7533`
+- F1: `0.6280`
+- MCC: `0.1171`
+- AUC ROC: `0.5928`
+
+Recommended future evaluation:
+
+- Larger independent test sets.
+- Gene and chromosome holdout experiments.
+- Leakage checks across related variants.
+- Per-variant-type reporting for SNVs and indels.
+- Calibration analysis across thresholds.
 
 ## Limitations
 

@@ -101,10 +101,17 @@ def _generate_rule_based_explanation(
 
     return {
         "explanation": explanation,
+        "explanation_source": "rule-based",
         "confidence_level": confidence_level,
         "recommendation": RECOMMENDATION,
         "limitations": LIMITATIONS,
     }
+
+
+def _fallback_with_source(fallback: dict) -> dict:
+    result = dict(fallback)
+    result["explanation_source"] = "rule-based-fallback"
+    return result
 
 
 def _extract_json_object(text: str) -> dict:
@@ -136,7 +143,7 @@ def _generate_openai_explanation(
         from openai import OpenAI
     except ImportError:
         print("OpenAI package is not installed. Using rule-based explanation.")
-        return fallback
+        return _fallback_with_source(fallback)
 
     context = {
         "variant_name": variant_name,
@@ -169,20 +176,21 @@ def _generate_openai_explanation(
         output_text = str(getattr(response, "output_text", "")).strip()
         if not output_text:
             print("OpenAI explanation response was empty. Using rule-based explanation.")
-            return fallback
+            return _fallback_with_source(fallback)
 
         parsed = _extract_json_object(output_text)
         explanation = str(parsed.get("explanation", "")).strip()
         if not explanation:
             print("OpenAI explanation JSON did not include explanation. Using rule-based explanation.")
-            return fallback
+            return _fallback_with_source(fallback)
 
         enhanced = dict(fallback)
         enhanced["explanation"] = explanation
+        enhanced["explanation_source"] = "openai"
         return enhanced
     except Exception as exc:  # pragma: no cover - network/API failures vary.
         print(f"OpenAI explanation failed: {type(exc).__name__}: {exc}. Using rule-based explanation.")
-        return fallback
+        return _fallback_with_source(fallback)
 
 
 def generate_explanation(
@@ -215,8 +223,8 @@ def generate_explanation(
     if not use_openai:
         return fallback
     if not openai_api_key:
-        print("USE_OPENAI_EXPLANATION is true, but OPENAI_API_KEY is missing. Using rule-based explanation.")
-        return fallback
+        print("AI explanation is enabled, but OPENAI_API_KEY is missing. Using rule-based explanation.")
+        return _fallback_with_source(fallback)
 
     return _generate_openai_explanation(
         fallback=fallback,

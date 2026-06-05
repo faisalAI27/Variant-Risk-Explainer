@@ -43,6 +43,7 @@ class AnalyzeResponse(BaseModel):
     model_name: str
     sequence_length_used: int
     explanation: str
+    explanation_source: str
     confidence_level: str
     recommendation: str
     limitations: list[str]

@@ -88,6 +88,7 @@ def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
         model_name=prediction.model_name,
         sequence_length_used=prediction.sequence_length_used,
         explanation=explanation["explanation"],
+        explanation_source=explanation["explanation_source"],
         confidence_level=explanation["confidence_level"],
         recommendation=explanation["recommendation"],
         limitations=explanation["limitations"],

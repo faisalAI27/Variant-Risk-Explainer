@@ -25,6 +25,12 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _ai_explanation_enabled() -> bool:
+    if os.getenv("USE_AI_EXPLANATION") is not None:
+        return _env_bool("USE_AI_EXPLANATION", False)
+    return _env_bool("USE_OPENAI_EXPLANATION", False)
+
+
 @dataclass(frozen=True)
 class Settings:
     app_name: str = "variant-risk-explainer"
@@ -35,7 +41,7 @@ class Settings:
     model_name: str = os.getenv("MODEL_NAME", "DNABERT-2 ClinVar 20k").strip() or "DNABERT-2 ClinVar 20k"
     device: str = os.getenv("DEVICE", "auto").strip().lower() or "auto"
     max_sequence_context_length: int = int(os.getenv("MAX_SEQUENCE_CONTEXT_LENGTH", "2000"))
-    use_openai_explanation: bool = _env_bool("USE_OPENAI_EXPLANATION", False)
+    use_openai_explanation: bool = _ai_explanation_enabled()
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "").strip()
     openai_explanation_model: str = (
         os.getenv("OPENAI_EXPLANATION_MODEL", "gpt-4.1-mini").strip() or "gpt-4.1-mini"

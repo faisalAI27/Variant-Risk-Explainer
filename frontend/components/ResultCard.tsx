@@ -13,6 +13,16 @@ function asPercent(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
 }
 
+function explanationSourceLabel(source: string): string {
+  if (source === "openai") {
+    return "OpenAI";
+  }
+  if (source === "rule-based-fallback") {
+    return "Rule-based fallback";
+  }
+  return "Rule-based";
+}
+
 export function ResultCard({ error, isLoading, result }: ResultCardProps) {
   if (isLoading) {
     return (
@@ -100,6 +110,9 @@ export function ResultCard({ error, isLoading, result }: ResultCardProps) {
         <p>{result.explanation}</p>
         <p>
           <strong>Confidence level:</strong> {result.confidence_level}
+        </p>
+        <p>
+          <strong>Explanation source:</strong> {explanationSourceLabel(result.explanation_source)}
         </p>
       </div>
 

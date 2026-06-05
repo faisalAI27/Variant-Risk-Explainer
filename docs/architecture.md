@@ -3,61 +3,78 @@
 Variant Risk Explainer is split into four top-level folders:
 
 ```text
-training/  -> Colab training pipeline
+training/  -> ClinVar GRCh38 preparation, DNABERT-2 training, evaluation scripts
 backend/   -> FastAPI inference API
 frontend/  -> Next.js research demo UI
 docs/      -> project documentation
 ```
 
-## Component Flow
+## Runtime Flow
 
 ```text
 User
   |
   v
-Next.js frontend
+Next.js Frontend
   |
   | POST /analyze
   v
-FastAPI backend
+FastAPI Backend
   |
-  | mock mode or trained DNABERT-2 model directory
   v
-Variant risk response
+DNABERT-2 Prediction Service
+  |
+  v
+Explanation Layer
+  |
+  v
+Research/Demo Result
 ```
-
-## Training Flow
-
-1. Download ClinVar GRCh38 VCF data in Google Colab.
-2. Load a GRCh38 reference FASTA.
-3. Extract sequence windows around single nucleotide variants.
-4. Map ClinVar clinical significance labels into research classes.
-5. Fine-tune DNABERT-2 with Hugging Face Transformers.
-6. Save an exported model directory for backend inference.
-
-Training is intentionally not wired into the local runtime. The backend can run in mock mode until a trained model is available.
 
 ## Backend Flow
 
-The backend exposes `POST /analyze`. It validates the submitted GRCh38 variant, chooses a model implementation, returns a risk label, confidence, explanation, and research-only disclaimers.
+1. Load settings from `backend/.env`.
+2. Load the DNABERT-2 tokenizer and sequence-classification model from `MODEL_DIR`.
+3. Select device automatically: CUDA, then MPS, then CPU.
+4. Clean the submitted DNA sequence.
+5. Center crop sequences longer than `MODEL_MAX_LENGTH`.
+6. Run DNABERT-2 in inference mode.
+7. Apply the tuned pathogenic threshold, currently `0.16`.
+8. Generate a cautious explanation.
+9. Return prediction probabilities, label, explanation, limitations, and disclaimer.
 
-Model mode is controlled by environment variables:
+## Explanation Layer
 
-- `MODEL_MODE=mock`: always use deterministic mock inference.
-- `MODEL_MODE=trained`: require a trained model at `MODEL_DIR`.
-- `MODEL_MODE=auto`: use the trained model when available, otherwise fall back to mock mode.
+The explanation layer is designed to be safe for a research demo:
+
+- `rule-based`: local deterministic explanation.
+- `openai`: optional OpenAI-generated explanation paragraph.
+- `rule-based-fallback`: local explanation used because AI explanation failed or was missing configuration.
+
+The LLM, when enabled, rewrites only the explanation paragraph. It does not control the prediction, probabilities, threshold, confidence level, recommendation, limitations, or disclaimer.
 
 ## Frontend Flow
 
 The frontend provides:
 
-- Variant input form.
-- Loading and error states.
-- Result card.
-- Local in-browser history panel.
+- backend health indicator
+- DNA sequence input form
+- loading and error states
+- result card
+- explanation source display
+- local in-browser history panel
+- research/demo disclaimer
 
-The frontend uses `NEXT_PUBLIC_API_BASE_URL` to find the backend.
+## Training Flow
+
+1. Prepare ClinVar GRCh38 records.
+2. Extract reference sequence windows.
+3. Build alternate-allele sequence windows.
+4. Filter uncertain/conflicting labels.
+5. Fine-tune DNABERT-2 on the alternate-sequence dataset.
+6. Evaluate on held-out validation and test splits.
+7. Export a self-contained Hugging Face model folder for backend inference.
 
 ## Safety Boundary
 
-This is a research and educational demo. It does not diagnose disease, recommend care, or replace genetic counseling or clinical interpretation. All user-facing layers should preserve that boundary.
+This is a research and educational demo. It does not diagnose disease, recommend care, or replace genetic counseling or clinical variant interpretation. All user-facing layers should preserve that boundary.
