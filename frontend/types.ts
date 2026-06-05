@@ -16,6 +16,10 @@ export type AnalyzeResponse = {
   threshold: number;
   model_name: string;
   sequence_length_used: number;
+  explanation: string;
+  confidence_level: string;
+  recommendation: string;
+  limitations: string[];
   disclaimer: string;
 };
 

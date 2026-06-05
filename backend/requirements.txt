@@ -6,3 +6,4 @@ safetensors
 pydantic
 numpy
 python-dotenv
+openai

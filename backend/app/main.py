@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
 from app.schemas import AnalyzeRequest, AnalyzeResponse, HealthResponse
+from app.services.explanation_service import generate_explanation
 from app.services.model_service import ModelService
 
 
@@ -59,6 +60,22 @@ def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
     except Exception as exc:  # pragma: no cover - defensive boundary for inference failures.
         raise HTTPException(status_code=500, detail=f"Prediction failed: {type(exc).__name__}: {exc}") from exc
 
+    explanation = generate_explanation(
+        prediction_class=prediction.prediction_class,
+        prediction_label=prediction.prediction_label,
+        risk_level=prediction.risk_level,
+        benign_probability=prediction.benign_probability,
+        pathogenic_probability=prediction.pathogenic_probability,
+        threshold=prediction.threshold,
+        variant_name=request.variant_name,
+        gene=request.gene,
+        sequence_length_used=prediction.sequence_length_used,
+        use_openai=settings.use_openai_explanation,
+        openai_api_key=settings.openai_api_key,
+        openai_model=settings.openai_explanation_model,
+        openai_timeout=settings.openai_explanation_timeout,
+    )
+
     return AnalyzeResponse(
         variant_name=request.variant_name,
         gene=request.gene,
@@ -70,5 +87,9 @@ def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
         threshold=prediction.threshold,
         model_name=prediction.model_name,
         sequence_length_used=prediction.sequence_length_used,
+        explanation=explanation["explanation"],
+        confidence_level=explanation["confidence_level"],
+        recommendation=explanation["recommendation"],
+        limitations=explanation["limitations"],
         disclaimer=prediction.disclaimer,
     )

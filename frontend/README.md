@@ -4,7 +4,9 @@ Next.js frontend for the Variant Risk Explainer research demo.
 
 The app connects to the FastAPI backend, submits a DNA sequence to
 `POST /analyze`, shows the DNABERT-2 prediction result, and displays backend
-health/model status.
+health/model status. The result card also displays the backend's rule-based
+or optional OpenAI explanation, confidence level, recommendation, and
+limitations.
 
 This is for research/demo use only. It is not a clinical diagnostic system.
 
@@ -66,7 +68,13 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8001
 5. Click `Analyze Variant`.
 
 The result card shows benign/pathogenic probabilities, threshold, model name,
-and sequence length used after center cropping.
+sequence length used after center cropping, and a beginner-friendly explanation.
+
+The explanation is generated from the backend model output and threshold. It is
+not medical advice and is not a clinical interpretation. If the backend has
+`USE_OPENAI_EXPLANATION=true`, the backend may use OpenAI to improve the
+explanation paragraph. Do not put the OpenAI API key in the frontend; keep it in
+`backend/.env` only.
 
 ## Safety Notice
 

@@ -95,7 +95,33 @@ export function ResultCard({ error, isLoading, result }: ResultCardProps) {
         </div>
       </div>
 
-      <p className="disclaimer">{result.disclaimer}</p>
+      <div className="explanation">
+        <h3>Explanation</h3>
+        <p>{result.explanation}</p>
+        <p>
+          <strong>Confidence level:</strong> {result.confidence_level}
+        </p>
+      </div>
+
+      <div className="recommendationBlock">
+        <h3>Recommendation</h3>
+        <p>{result.recommendation}</p>
+      </div>
+
+      <div className="limitations">
+        <h3>Limitations</h3>
+        <ul>
+          {result.limitations.map((limitation) => (
+            <li key={limitation}>{limitation}</li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="disclaimer">
+        <strong>Research/demo only. Not for clinical diagnosis.</strong>
+        <br />
+        {result.disclaimer}
+      </p>
     </section>
   );
 }

@@ -432,6 +432,24 @@ dd {
   line-height: 1.55;
 }
 
+.explanation p {
+  margin-bottom: 8px;
+}
+
+.recommendationBlock {
+  margin-top: 16px;
+  border: 1px solid #d8c8b0;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fffaf0;
+  color: #4e3c34;
+  line-height: 1.5;
+}
+
+.recommendationBlock p {
+  margin-bottom: 0;
+}
+
 .limitations {
   margin-top: 18px;
   border-top: 1px solid var(--border);
