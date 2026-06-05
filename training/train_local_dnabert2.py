@@ -13,6 +13,7 @@ import gc
 import inspect
 import json
 import os
+import shutil
 import sys
 import zipfile
 from dataclasses import dataclass
@@ -737,6 +738,45 @@ def create_patch_from_project_root() -> Path:
     return resolve_path(patch_dir)
 
 
+def ensure_local_patch_for_export() -> Path:
+    patch_dir = resolve_path(LOCAL_DNABERT2_PATCH_DIR)
+    if patch_dir.exists() and local_patch_is_ready(patch_dir):
+        return patch_dir
+
+    print("Creating local no-Triton DNABERT-2 patch for self-contained model export.")
+    return create_patch_from_project_root()
+
+
+def copy_dnabert2_custom_code_to_final_model(final_model_dir: Path) -> list[str]:
+    """Make final_model self-contained for trust_remote_code=True loading."""
+    patch_dir = ensure_local_patch_for_export()
+    final_model_dir.mkdir(parents=True, exist_ok=True)
+
+    py_files = sorted(patch_dir.glob("*.py"))
+    if not py_files:
+        raise FileNotFoundError(f"No DNABERT-2 Python code files found in local patch: {patch_dir}")
+
+    copied_files: list[str] = []
+    for source_path in py_files:
+        destination_path = final_model_dir / source_path.name
+        shutil.copy2(source_path, destination_path)
+        copied_files.append(source_path.name)
+
+    required_files = ["configuration_bert.py", "bert_layers.py", "bert_padding.py"]
+    missing_files = [filename for filename in required_files if not (final_model_dir / filename).exists()]
+    if missing_files:
+        raise FileNotFoundError(
+            "final_model is missing required DNABERT-2 custom code files after export: "
+            f"{missing_files}"
+        )
+
+    print("Copied DNABERT-2 custom code into final_model:")
+    for filename in copied_files:
+        print(f"  {filename}")
+    print()
+    return copied_files
+
+
 def load_model_from_source(model_source: str | Path):
     config = AutoConfig.from_pretrained(str(model_source), trust_remote_code=True)
     config = disable_flash_attention_on_config(config)
@@ -1157,6 +1197,7 @@ def main() -> None:
     final_model_dir.mkdir(parents=True, exist_ok=True)
     trainer.save_model(str(final_model_dir))
     tokenizer.save_pretrained(str(final_model_dir))
+    custom_code_files = copy_dnabert2_custom_code_to_final_model(final_model_dir)
 
     metrics = {
         "model_name": MODEL_NAME,
@@ -1196,6 +1237,7 @@ def main() -> None:
         "test_eval_rows": len(eval_test_df),
         "validation_metrics": validation_metrics,
         "test_metrics": test_metrics,
+        "final_model_custom_code_files": custom_code_files,
     }
     metrics_path = save_metrics(output_dir, metrics)
     zip_path = zip_final_model(output_dir, final_model_dir)

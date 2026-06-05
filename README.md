@@ -60,10 +60,20 @@ Open `http://localhost:3000`.
 
 Training is intended for Google Colab only. Do not train the model locally.
 
-1. Open `training/colab_dnabert2_clinvar_finetune.ipynb` in Google Colab.
+1. Open `training/colab_dnabert2_heavy_training.ipynb` in Google Colab for the current heavy-training workflow.
 2. Follow the notebook cells to install dependencies, download ClinVar GRCh38 data, prepare examples, and fine-tune DNABERT-2.
 3. Export the trained Hugging Face model directory.
 4. Point the backend `MODEL_DIR` environment variable to that exported model directory.
+
+## Data and Model Artifact Policy
+
+- Full datasets are not committed to GitHub.
+- Trained model weights are not committed to GitHub.
+- Use the training scripts or Colab notebook to regenerate datasets.
+- Store trained models in Google Drive or local storage.
+- For local evaluation, place the 20k alternate-sequence dataset in `training/csv_files_20k_alt/`.
+- For backend use, place the model folder in `backend/models/final_model/` or set the backend model path environment variable.
+- The local final model folder `training/training_model_files/` and the 20k CSV folder `training/csv_files_20k_alt/` are intentionally ignored by Git.
 
 ## Environment Files
 

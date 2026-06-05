@@ -1,0 +1,82 @@
+{
+  "model_name": "zhihan1996/DNABERT-2-117M",
+  "model_path": "/Users/faisalimran/Desktop/tarns_project/training/local_dnabert2_patch",
+  "train_csv": "/Users/faisalimran/Desktop/tarns_project/training/csv_files_large_alt/train_with_alt_sequences.csv",
+  "validation_csv": "/Users/faisalimran/Desktop/tarns_project/training/csv_files_large_alt/val_with_alt_sequences.csv",
+  "test_csv": "/Users/faisalimran/Desktop/tarns_project/training/csv_files_large_alt/test_with_alt_sequences.csv",
+  "dataset_dir": "/Users/faisalimran/Desktop/tarns_project/training/csv_files_large_alt",
+  "sequence_column": "sequence",
+  "is_alt_sequence_dataset": true,
+  "is_large_alt_sequence_dataset": true,
+  "device": "mps",
+  "freeze_encoder": true,
+  "unfreeze_last_n_layers": 2,
+  "freeze_embeddings": true,
+  "use_class_weights": true,
+  "class_weights": [
+    1.0,
+    1.0
+  ],
+  "center_crop": true,
+  "tune_threshold": true,
+  "save_eval_each_epoch": false,
+  "eval_accumulation_steps": 1,
+  "eval_subset_size": 750,
+  "selected_threshold": 0.41,
+  "best_validation_mcc_for_threshold": 0.12554169541533072,
+  "sample_size": 0,
+  "epochs": 5.0,
+  "max_length": 512,
+  "variant_center_index": 512,
+  "train_metrics": {
+    "train_runtime": 2529.8996,
+    "train_samples_per_second": 6.917,
+    "train_steps_per_second": 0.866,
+    "total_flos": 6124490695680000.0,
+    "train_loss": 0.6810980735848483,
+    "epoch": 5.0
+  },
+  "train_rows": 3500,
+  "validation_rows": 750,
+  "test_rows": 750,
+  "validation_eval_rows": 750,
+  "test_eval_rows": 750,
+  "validation_metrics": {
+    "selected_threshold": 0.41,
+    "accuracy": 0.54,
+    "precision": 0.5225903614457831,
+    "recall": 0.9253333333333333,
+    "f1": 0.6679499518768046,
+    "mcc": 0.12554169541533072,
+    "auc_roc": 0.572736,
+    "confusion_matrix": [
+      [
+        58,
+        317
+      ],
+      [
+        28,
+        347
+      ]
+    ]
+  },
+  "test_metrics": {
+    "selected_threshold": 0.41,
+    "accuracy": 0.512,
+    "precision": 0.5067873303167421,
+    "recall": 0.896,
+    "f1": 0.6473988439306358,
+    "mcc": 0.03747366058909428,
+    "auc_roc": 0.5497315555555555,
+    "confusion_matrix": [
+      [
+        48,
+        327
+      ],
+      [
+        39,
+        336
+      ]
+    ]
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "model_dir": "/Users/faisalimran/Desktop/tarns_project/training/training_model_files",
+  "dataset_dir": "/Users/faisalimran/Desktop/tarns_project/training/csv_files_20k_alt",
+  "device": "mps",
+  "max_length": 512,
+  "variant_center_index": 512,
+  "batch_size": 1,
+  "threshold_args": {
+    "tune_threshold": true,
+    "threshold": null,
+    "threshold_min": 0.1,
+    "threshold_max": 0.9,
+    "threshold_step": 0.01
+  },
+  "threshold": 0.16,
+  "selected_threshold": 0.16,
+  "threshold_selection": {
+    "threshold_min": 0.1,
+    "threshold_max": 0.9,
+    "threshold_step": 0.01,
+    "thresholds_tested": 81,
+    "best_threshold": 0.16,
+    "best_validation_mcc": 0.15644505036060144,
+    "mode": "full_validation_mcc",
+    "selected_threshold": 0.16
+  },
+  "validation_metrics": {
+    "threshold": 0.16,
+    "accuracy": 0.5723333333333334,
+    "precision": 0.552390149686142,
+    "recall": 0.7626666666666667,
+    "f1": 0.6407168860263232,
+    "mcc": 0.15644505036060144,
+    "auc_roc": 0.6018537777777778,
+    "confusion_matrix": [
+      [
+        573,
+        927
+      ],
+      [
+        356,
+        1144
+      ]
+    ],
+    "rows": 3000
+  },
+  "test_metrics": {
+    "threshold": 0.16,
+    "accuracy": 0.5536666666666666,
+    "precision": 0.5383515959980943,
+    "recall": 0.7533333333333333,
+    "f1": 0.6279522089469297,
+    "mcc": 0.1170731385436657,
+    "auc_roc": 0.5927693333333333,
+    "confusion_matrix": [
+      [
+        531,
+        969
+      ],
+      [
+        370,
+        1130
+      ]
+    ],
+    "rows": 3000
+  }
+}

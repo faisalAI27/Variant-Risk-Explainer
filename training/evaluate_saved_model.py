@@ -45,6 +45,7 @@ from training.train_smoke_test import (  # noqa: E402
 
 OUTPUT_DIR = PROJECT_ROOT / "training" / "outputs" / "dnabert2_clinvar"
 MODEL_DIR = OUTPUT_DIR / "final_model"
+UPLOADED_MODEL_DIR = PROJECT_ROOT / "training" / "training_model_files"
 TRAINING_METRICS_PATH = OUTPUT_DIR / "metrics.json"
 FULL_EVAL_METRICS_PATH = OUTPUT_DIR / "full_eval_metrics.json"
 
@@ -120,6 +121,15 @@ def parse_args() -> argparse.Namespace:
         default=0.01,
         help="Threshold step size when tuning.",
     )
+    parser.add_argument(
+        "--model_dir",
+        type=Path,
+        default=None,
+        help=(
+            "Saved model folder to evaluate. Defaults to training/outputs/dnabert2_clinvar/final_model; "
+            "if that is missing, falls back to training/training_model_files."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -138,6 +148,26 @@ def resolve_project_path(path: Path) -> Path:
     if path.is_absolute():
         return path
     return PROJECT_ROOT / path
+
+
+def choose_model_dir(requested_model_dir: Path | None) -> Path:
+    if requested_model_dir is not None:
+        model_dir = resolve_project_path(requested_model_dir)
+        if not model_dir.exists():
+            raise FileNotFoundError(f"Requested saved model directory not found: {model_dir}")
+        return model_dir
+
+    if MODEL_DIR.exists():
+        return MODEL_DIR
+
+    if UPLOADED_MODEL_DIR.exists():
+        return UPLOADED_MODEL_DIR
+
+    raise FileNotFoundError(
+        "Saved model directory not found. Searched:\n"
+        f"{MODEL_DIR}\n"
+        f"{UPLOADED_MODEL_DIR}"
+    )
 
 
 def choose_device() -> str:
@@ -338,20 +368,20 @@ def load_saved_model_with_local_patch(model_dir: Path):
 
 
 def load_saved_model(model_dir: Path, device: str):
-    if device == "cuda":
-        print("CUDA detected. Trying to load saved model directly first.")
-        try:
-            model = AutoModelForSequenceClassification.from_pretrained(
-                str(model_dir),
-                trust_remote_code=True,
-                low_cpu_mem_usage=False,
-            )
-            print("Saved model loaded successfully without the local Mac patch.")
-            return model
-        except Exception as error:
-            print("Direct saved-model load failed.")
-            print(f"Direct load error: {error}")
-            print("Falling back to local no-Triton DNABERT-2 code.")
+    print(f"Trying to load saved model directly from: {model_dir}")
+    print(f"Selected device: {device}")
+    try:
+        model = AutoModelForSequenceClassification.from_pretrained(
+            str(model_dir),
+            trust_remote_code=True,
+            low_cpu_mem_usage=False,
+        )
+        print("Saved model loaded cleanly")
+        return model
+    except Exception as error:
+        print("Direct saved-model loading failed.")
+        print(f"Reason: {type(error).__name__}: {error}")
+        print("Falling back to training/local_dnabert2_patch.")
 
     return load_saved_model_with_local_patch(model_dir)
 
@@ -519,14 +549,12 @@ def main() -> None:
     args = parse_args()
     validate_args(args)
 
-    if not MODEL_DIR.exists():
-        raise FileNotFoundError(f"Saved model directory not found: {MODEL_DIR}")
-
+    model_dir = choose_model_dir(args.model_dir)
     dataset_dir = find_dataset_dir()
     device = choose_device()
 
     print("Memory-safe saved model evaluation")
-    print(f"Saved model directory: {MODEL_DIR}")
+    print(f"Saved model directory: {model_dir}")
     print(f"Selected dataset directory: {dataset_dir}")
     print(f"Selected device: {device}")
     print(f"Tune threshold on full validation set: {args.tune_threshold}")
@@ -542,11 +570,11 @@ def main() -> None:
     print()
 
     print("Loading tokenizer and model.")
-    tokenizer = AutoTokenizer.from_pretrained(str(MODEL_DIR), trust_remote_code=True)
-    model = load_saved_model(MODEL_DIR, device)
+    tokenizer = AutoTokenizer.from_pretrained(str(model_dir), trust_remote_code=True)
+    model = load_saved_model(model_dir, device)
 
     all_metrics = {
-        "model_dir": str(MODEL_DIR),
+        "model_dir": str(model_dir),
         "dataset_dir": str(dataset_dir),
         "device": device,
         "max_length": MAX_LENGTH,
