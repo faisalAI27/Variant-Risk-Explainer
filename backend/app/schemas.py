@@ -7,8 +7,55 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 VALID_CHROMOSOMES = {str(value) for value in range(1, 23)} | {"X", "Y", "MT"}
 VALID_BASES = set("ACGTN")
+DISCLAIMER = (
+    "Research/demo use only. This model is not a clinical diagnostic system "
+    "and must not be used for medical decisions."
+)
 
 
+class AnalyzeRequest(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "variant_name": "GRCh38-7-140753336-A-T",
+                "gene": "BRAF",
+                "sequence": "ACGTACGTACGTACGTACGT",
+                "notes": "Example sequence for research demo testing.",
+            }
+        }
+    )
+
+    sequence: str = Field(..., description="DNA sequence using A/C/G/T/N.")
+    variant_name: str | None = Field(default=None, max_length=128)
+    gene: str | None = Field(default=None, max_length=64)
+    notes: str | None = Field(default=None, max_length=1000)
+
+
+class AnalyzeResponse(BaseModel):
+    variant_name: str | None
+    gene: str | None
+    prediction_class: Literal[0, 1]
+    prediction_label: str
+    risk_level: Literal["Lower", "Elevated"]
+    benign_probability: float = Field(..., ge=0.0, le=1.0)
+    pathogenic_probability: float = Field(..., ge=0.0, le=1.0)
+    threshold: float = Field(..., ge=0.0, le=1.0)
+    model_name: str
+    sequence_length_used: int
+    disclaimer: str = DISCLAIMER
+
+
+class HealthResponse(BaseModel):
+    status: Literal["ok", "degraded"]
+    model_loaded: bool
+    device: str
+    model_dir: str
+    threshold: float
+    model_name: str
+    load_error: str | None = None
+
+
+# Legacy schemas kept so older modules/tests importing them do not break.
 def normalize_chromosome(value: str) -> str:
     chrom = str(value).strip().upper()
     if chrom.startswith("CHR"):
@@ -19,28 +66,12 @@ def normalize_chromosome(value: str) -> str:
 
 
 class VariantRequest(BaseModel):
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "chromosome": "7",
-                "position": 140753336,
-                "reference": "A",
-                "alternate": "T",
-                "gene": "BRAF",
-                "sequence_context": "ACGTACGTACGT",
-            }
-        }
-    )
-
     chromosome: str = Field(..., description="GRCh38 chromosome: 1-22, X, Y, MT, with optional chr prefix.")
     position: int = Field(..., description="1-based GRCh38 coordinate.")
     reference: str = Field(..., description="Reference allele.")
     alternate: str = Field(..., description="Alternate allele.")
     gene: str | None = Field(default=None, max_length=32, description="Optional gene symbol.")
-    sequence_context: str | None = Field(
-        default=None,
-        description="Optional GRCh38 sequence context around the variant.",
-    )
+    sequence_context: str | None = Field(default=None, description="Optional GRCh38 sequence context.")
 
     @field_validator("chromosome", mode="before")
     @classmethod
@@ -107,9 +138,3 @@ class VariantAnalysisResponse(BaseModel):
     explanation: str
     limitations: list[str]
     disclaimer: str
-
-
-class HealthResponse(BaseModel):
-    status: Literal["ok"]
-    service: str
-    model_mode: str

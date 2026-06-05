@@ -1,39 +1,118 @@
 # Backend
 
-This folder contains the FastAPI backend for Variant Risk Explainer.
+FastAPI backend for the Variant Risk Explainer research demo.
 
-The API exposes `POST /analyze` and returns a research-only variant risk explanation. It runs in mock mode by default when no trained model is available.
+The backend loads a fine-tuned DNABERT-2 sequence-classification model once at
+startup and exposes `POST /analyze` for DNA sequence risk prediction.
+
+This is for research/demo use only. It is not a clinical diagnostic system and
+must not be used for medical decisions.
 
 ## Setup
 
+From the repository root:
+
 ```bash
+cd backend
 python -m venv .venv
 source .venv/bin/activate
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn app.main:app --reload --port 8000
 ```
 
-Open `http://localhost:8000/docs` for the interactive API docs.
+## Model Folder
 
-## Model Modes
+The final local model folder is:
 
-- `MODEL_MODE=mock`: deterministic mock responses for development.
-- `MODEL_MODE=auto`: use `MODEL_DIR` when available, otherwise mock mode.
-- `MODEL_MODE=trained`: require a trained Hugging Face model directory at `MODEL_DIR`.
+```text
+training/training_model_files/
+```
 
-For trained mode, install optional model dependencies:
+That folder is intentionally ignored by Git because it contains large model
+files. Keep it locally, or place a copy at:
+
+```text
+backend/models/final_model/
+```
+
+Configure the model path in `backend/.env`:
 
 ```bash
-pip install -r requirements-model.txt
+MODEL_DIR=../training/training_model_files
+MODEL_THRESHOLD=0.16
+MODEL_MAX_LENGTH=512
+MODEL_NAME=DNABERT-2 ClinVar 20k
+DEVICE=auto
 ```
 
-## Tests
+`DEVICE=auto` selects CUDA, then MPS, then CPU.
+
+## Run
+
+From `backend/`:
 
 ```bash
-pytest
+uvicorn app.main:app --reload
 ```
+
+Open:
+
+```text
+http://localhost:8000/docs
+```
+
+## Health Check
+
+```bash
+curl http://localhost:8000/health
+```
+
+The response shows whether the model loaded, selected device, model directory,
+and threshold.
+
+## Analyze Example
+
+```bash
+curl -X POST http://localhost:8000/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "variant_name": "GRCh38-example",
+    "gene": "BRAF",
+    "sequence": "ACGTACGTACGTACGTACGTACGTACGTACGT",
+    "notes": "Demo request"
+  }'
+```
+
+Python example:
+
+```python
+import requests
+
+response = requests.post(
+    "http://localhost:8000/analyze",
+    json={
+        "variant_name": "GRCh38-example",
+        "gene": "BRAF",
+        "sequence": "ACGTACGTACGTACGTACGTACGTACGTACGT",
+    },
+    timeout=30,
+)
+print(response.json())
+```
+
+## Response Fields
+
+- `prediction_class`: `0` for benign/likely benign, `1` for pathogenic/likely pathogenic
+- `prediction_label`: human-readable label
+- `risk_level`: `Lower` or `Elevated`
+- `benign_probability`: class 0 probability
+- `pathogenic_probability`: class 1 probability
+- `threshold`: decision threshold, currently `0.16`
+- `sequence_length_used`: sequence length after optional center crop
 
 ## Safety Notice
 
-The backend response includes a research-only disclaimer. Do not remove it from user-facing responses.
+Predictions are experimental model outputs. They can be wrong, incomplete,
+biased by ClinVar labels, or invalid outside the training distribution. Do not
+use this backend for diagnosis, treatment, or clinical decision-making.

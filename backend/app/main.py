@@ -1,23 +1,20 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from uuid import uuid4
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
-from app.model import DISCLAIMER, LIMITATIONS, build_model
-from app.schemas import HealthResponse, VariantAnalysisResponse, VariantRequest
+from app.schemas import AnalyzeRequest, AnalyzeResponse, HealthResponse
+from app.services.model_service import ModelService
 
 
 settings = get_settings()
-model_runner = build_model(settings)
+model_service = ModelService(settings)
 
 app = FastAPI(
     title="Variant Risk Explainer API",
-    version="0.1.0",
-    description="Research-only FastAPI backend for GRCh38 variant risk exploration.",
+    version="0.2.0",
+    description="Research-only FastAPI backend for DNABERT-2 ClinVar variant risk exploration.",
 )
 
 app.add_middleware(
@@ -29,32 +26,49 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+def root() -> dict[str, str]:
+    return {
+        "message": "Variant Risk Explainer API",
+        "model": settings.model_name,
+        "disclaimer": "Research/demo use only. Not for clinical diagnosis.",
+    }
+
+
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
-    return HealthResponse(status="ok", service=settings.app_name, model_mode=model_runner.mode)
+    return HealthResponse(
+        status="ok" if model_service.model_loaded else "degraded",
+        model_loaded=model_service.model_loaded,
+        device=model_service.device,
+        model_dir=str(model_service.model_dir),
+        threshold=model_service.threshold,
+        model_name=model_service.model_name,
+        load_error=model_service.load_error,
+    )
 
 
-@app.post("/analyze", response_model=VariantAnalysisResponse)
-def analyze_variant(request: VariantRequest) -> VariantAnalysisResponse:
-    if request.sequence_context and len(request.sequence_context) > settings.max_sequence_context_length:
-        raise HTTPException(
-            status_code=422,
-            detail=f"sequence_context must be {settings.max_sequence_context_length} bases or fewer",
-        )
-
+@app.post("/analyze", response_model=AnalyzeResponse)
+def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
     try:
-        prediction = model_runner.analyze(request)
+        prediction = model_service.predict(request.sequence)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except Exception as exc:  # pragma: no cover - defensive boundary for inference failures.
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {type(exc).__name__}: {exc}") from exc
 
-    return VariantAnalysisResponse(
-        request_id=str(uuid4()),
-        submitted_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
-        input=request,
-        risk_label=prediction.risk_label,
-        confidence=prediction.confidence,
-        model_mode=prediction.model_mode,
-        explanation=prediction.explanation,
-        limitations=LIMITATIONS,
-        disclaimer=DISCLAIMER,
+    return AnalyzeResponse(
+        variant_name=request.variant_name,
+        gene=request.gene,
+        prediction_class=prediction.prediction_class,
+        prediction_label=prediction.prediction_label,
+        risk_level=prediction.risk_level,
+        benign_probability=prediction.benign_probability,
+        pathogenic_probability=prediction.pathogenic_probability,
+        threshold=prediction.threshold,
+        model_name=prediction.model_name,
+        sequence_length_used=prediction.sequence_length_used,
+        disclaimer=prediction.disclaimer,
     )
