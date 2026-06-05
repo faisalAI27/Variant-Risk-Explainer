@@ -1,25 +1,29 @@
 "use client";
 
 import { Loader2, RotateCcw, Search } from "lucide-react";
-import { FormEvent, useState } from "react";
-import type { VariantRequest } from "@/types";
+import { FormEvent, useMemo, useState } from "react";
+import type { AnalyzeRequest } from "@/types";
+
+const EXAMPLE_SEQUENCE =
+  "ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT";
 
 const INITIAL_FORM = {
-  chromosome: "7",
-  position: "140753336",
-  reference: "A",
-  alternate: "T",
-  gene: "BRAF",
-  sequence_context: ""
+  variant_name: "",
+  gene: "",
+  sequence: "",
+  notes: ""
 };
 
 type VariantFormProps = {
   isLoading: boolean;
-  onAnalyze: (input: VariantRequest) => void;
+  onAnalyze: (input: AnalyzeRequest) => void;
+  onClearResult: () => void;
 };
 
-export function VariantForm({ isLoading, onAnalyze }: VariantFormProps) {
+export function VariantForm({ isLoading, onAnalyze, onClearResult }: VariantFormProps) {
   const [form, setForm] = useState(INITIAL_FORM);
+
+  const sequenceLength = useMemo(() => form.sequence.replace(/\s+/g, "").length, [form.sequence]);
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -28,68 +32,32 @@ export function VariantForm({ isLoading, onAnalyze }: VariantFormProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     onAnalyze({
-      chromosome: form.chromosome.trim(),
-      position: Number(form.position),
-      reference: form.reference.trim(),
-      alternate: form.alternate.trim(),
+      variant_name: form.variant_name.trim() || null,
       gene: form.gene.trim() || null,
-      sequence_context: form.sequence_context.trim() || null
+      sequence: form.sequence,
+      notes: form.notes.trim() || null
     });
   }
 
-  function handleReset() {
+  function handleClear() {
     setForm(INITIAL_FORM);
+    onClearResult();
   }
 
   return (
     <form className="toolPanel" onSubmit={handleSubmit}>
       <div className="panelHeader">
-        <h2>Variant</h2>
+        <h2>Analyze Sequence</h2>
         <span className="buildPill">GRCh38</span>
       </div>
 
-      <div className="formGrid">
+      <div className="formGrid twoColumn">
         <label>
-          <span>Chromosome</span>
+          <span>Variant name</span>
           <input
-            required
-            value={form.chromosome}
-            onChange={(event) => updateField("chromosome", event.target.value)}
-            placeholder="7"
-          />
-        </label>
-
-        <label>
-          <span>Position</span>
-          <input
-            required
-            min={1}
-            type="number"
-            value={form.position}
-            onChange={(event) => updateField("position", event.target.value)}
-            placeholder="140753336"
-          />
-        </label>
-
-        <label>
-          <span>Reference</span>
-          <input
-            required
-            maxLength={50}
-            value={form.reference}
-            onChange={(event) => updateField("reference", event.target.value.toUpperCase())}
-            placeholder="A"
-          />
-        </label>
-
-        <label>
-          <span>Alternate</span>
-          <input
-            required
-            maxLength={50}
-            value={form.alternate}
-            onChange={(event) => updateField("alternate", event.target.value.toUpperCase())}
-            placeholder="T"
+            value={form.variant_name}
+            onChange={(event) => updateField("variant_name", event.target.value)}
+            placeholder="GRCh38-7-140753336-A-T"
           />
         </label>
 
@@ -104,23 +72,38 @@ export function VariantForm({ isLoading, onAnalyze }: VariantFormProps) {
       </div>
 
       <label className="sequenceField">
-        <span>Sequence Context</span>
+        <span>DNA sequence</span>
         <textarea
-          value={form.sequence_context}
-          onChange={(event) => updateField("sequence_context", event.target.value.toUpperCase())}
-          placeholder="Optional GRCh38 sequence context"
-          rows={5}
+          required
+          value={form.sequence}
+          onChange={(event) => updateField("sequence", event.target.value.toUpperCase())}
+          placeholder={EXAMPLE_SEQUENCE}
+          rows={8}
+        />
+      </label>
+      <div className="fieldHelp">
+        <span>Use A, C, G, T, or N only.</span>
+        <span>{sequenceLength.toLocaleString()} characters</span>
+      </div>
+
+      <label className="notesField">
+        <span>Notes</span>
+        <textarea
+          value={form.notes}
+          onChange={(event) => updateField("notes", event.target.value)}
+          placeholder="Optional notes for this demo run"
+          rows={3}
         />
       </label>
 
       <div className="buttonRow">
         <button className="primaryButton" disabled={isLoading} type="submit">
           {isLoading ? <Loader2 aria-hidden className="spin" size={18} /> : <Search aria-hidden size={18} />}
-          Analyze
+          Analyze Variant
         </button>
-        <button className="secondaryButton" disabled={isLoading} type="button" onClick={handleReset}>
+        <button className="secondaryButton" disabled={isLoading} type="button" onClick={handleClear}>
           <RotateCcw aria-hidden size={18} />
-          Reset
+          Clear
         </button>
       </div>
     </form>

@@ -40,6 +40,7 @@ training/outputs/
 training/output/
 training/checkpoints/
 training/training_model_files/
+backend/models/
 checkpoints/
 runs/
 wandb/

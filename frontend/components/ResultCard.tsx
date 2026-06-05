@@ -1,26 +1,24 @@
 "use client";
 
 import { AlertTriangle, BadgeCheck, FlaskConical, Loader2 } from "lucide-react";
-import type { RiskLabel, VariantAnalysisResponse } from "@/types";
+import type { AnalyzeResponse } from "@/types";
 
 type ResultCardProps = {
   error: string | null;
   isLoading: boolean;
-  result: VariantAnalysisResponse | null;
+  result: AnalyzeResponse | null;
 };
 
-const LABEL_TEXT: Record<RiskLabel, string> = {
-  likely_benign: "Likely benign",
-  uncertain: "Uncertain",
-  likely_pathogenic: "Likely pathogenic"
-};
+function asPercent(value: number): string {
+  return `${(value * 100).toFixed(1)}%`;
+}
 
 export function ResultCard({ error, isLoading, result }: ResultCardProps) {
   if (isLoading) {
     return (
       <section className="resultPanel statePanel" aria-live="polite">
         <Loader2 aria-hidden className="spin" size={24} />
-        <p>Analyzing variant</p>
+        <p>Analyzing sequence with DNABERT-2...</p>
       </section>
     );
   }
@@ -41,61 +39,60 @@ export function ResultCard({ error, isLoading, result }: ResultCardProps) {
     return (
       <section className="resultPanel statePanel">
         <FlaskConical aria-hidden size={24} />
-        <p>No result yet</p>
+        <p>Submit a DNA sequence to see the research demo output.</p>
       </section>
     );
   }
 
-  const confidencePercent = Math.round(result.confidence * 100);
+  const riskClass = result.prediction_class === 1 ? "pathogenic" : "benign";
 
   return (
     <section className="resultPanel">
       <div className="panelHeader">
         <h2>Result</h2>
-        <span className="buildPill">{result.model_mode}</span>
+        <span className="buildPill">Research demo</span>
       </div>
 
-      <div className={`riskBadge ${result.risk_label}`}>
+      <div className={`riskBadge ${riskClass}`}>
         <BadgeCheck aria-hidden size={20} />
-        <span>{LABEL_TEXT[result.risk_label]}</span>
-      </div>
-
-      <div className="confidenceBlock">
-        <div className="confidenceTopline">
-          <span>Confidence</span>
-          <strong>{confidencePercent}%</strong>
-        </div>
-        <div className="confidenceTrack" aria-hidden>
-          <div className="confidenceFill" style={{ width: `${confidencePercent}%` }} />
-        </div>
+        <span>{result.prediction_label}</span>
       </div>
 
       <dl className="resultDetails">
         <div>
-          <dt>Variant</dt>
-          <dd>
-            {result.input.chromosome}:{result.input.position} {result.input.reference}&gt;{result.input.alternate}
-          </dd>
+          <dt>Risk level</dt>
+          <dd>{result.risk_level}</dd>
         </div>
         <div>
-          <dt>Gene</dt>
-          <dd>{result.input.gene || "Not provided"}</dd>
+          <dt>Pathogenic probability</dt>
+          <dd>{asPercent(result.pathogenic_probability)}</dd>
         </div>
         <div>
-          <dt>Build</dt>
-          <dd>{result.grch_build}</dd>
+          <dt>Benign probability</dt>
+          <dd>{asPercent(result.benign_probability)}</dd>
+        </div>
+        <div>
+          <dt>Threshold</dt>
+          <dd>{result.threshold.toFixed(2)}</dd>
+        </div>
+        <div>
+          <dt>Sequence length used</dt>
+          <dd>{result.sequence_length_used.toLocaleString()}</dd>
+        </div>
+        <div>
+          <dt>Model</dt>
+          <dd>{result.model_name}</dd>
         </div>
       </dl>
 
-      <p className="explanation">{result.explanation}</p>
-
-      <div className="limitations">
-        <h3>Limitations</h3>
-        <ul>
-          {result.limitations.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
+      <div className="probabilityBlock">
+        <div className="confidenceTopline">
+          <span>Pathogenic probability</span>
+          <strong>{asPercent(result.pathogenic_probability)}</strong>
+        </div>
+        <div className="confidenceTrack" aria-hidden>
+          <div className={`confidenceFill ${riskClass}`} style={{ width: asPercent(result.pathogenic_probability) }} />
+        </div>
       </div>
 
       <p className="disclaimer">{result.disclaimer}</p>

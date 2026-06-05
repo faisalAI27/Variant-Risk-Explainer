@@ -1,13 +1,13 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import type { VariantAnalysisResponse } from "@/types";
+import type { AnalysisHistoryItem } from "@/types";
 
 type HistoryPanelProps = {
-  history: VariantAnalysisResponse[];
+  history: AnalysisHistoryItem[];
   selectedId?: string;
   onClear: () => void;
-  onSelect: (result: VariantAnalysisResponse) => void;
+  onSelect: (result: AnalysisHistoryItem) => void;
 };
 
 export function HistoryPanel({ history, selectedId, onClear, onSelect }: HistoryPanelProps) {
@@ -26,17 +26,16 @@ export function HistoryPanel({ history, selectedId, onClear, onSelect }: History
         <div className="historyList">
           {history.map((item) => (
             <button
-              className={item.request_id === selectedId ? "historyItem selected" : "historyItem"}
-              key={item.request_id}
+              className={item.id === selectedId ? "historyItem selected" : "historyItem"}
+              key={item.id}
               type="button"
               onClick={() => onSelect(item)}
             >
-              <span className="historyVariant">
-                {item.input.chromosome}:{item.input.position} {item.input.reference}&gt;{item.input.alternate}
-              </span>
+              <span className="historyVariant">{item.variant_name || item.gene || "Unnamed sequence"}</span>
               <span className="historyMeta">
-                {item.risk_label.replaceAll("_", " ")} - {Math.round(item.confidence * 100)}%
+                {item.risk_level} - {(item.pathogenic_probability * 100).toFixed(1)}% pathogenic
               </span>
+              <span className="historySequence">{item.sequence_preview}</span>
             </button>
           ))}
         </div>
