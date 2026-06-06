@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 torch
 transformers
 safetensors
@@ -7,3 +7,5 @@ pydantic
 numpy
 python-dotenv
 openai
+huggingface_hub
+einops

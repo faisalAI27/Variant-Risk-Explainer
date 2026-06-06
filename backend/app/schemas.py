@@ -57,6 +57,9 @@ class HealthResponse(BaseModel):
     model_dir: str
     threshold: float
     model_name: str
+    explanation_mode: Literal["openai", "rule-based"]
+    ai_explanation_enabled: bool
+    openai_configured: bool
     load_error: str | None = None
 
 

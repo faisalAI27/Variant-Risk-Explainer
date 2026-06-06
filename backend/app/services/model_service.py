@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -34,7 +35,7 @@ class PredictionResult:
 class ModelService:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
-        self.model_dir = settings.resolved_model_dir()
+        self.model_dir = settings.resolved_model_source()
         self.threshold = settings.model_threshold
         self.max_length = settings.model_max_length
         self.model_name = settings.model_name
@@ -45,6 +46,10 @@ class ModelService:
         self.model = None
 
         self._load_model()
+
+    def _is_local_model_source(self) -> bool:
+        configured = self.settings.model_dir.strip()
+        return Path(self.model_dir).is_absolute() or configured.startswith(("./", "../", "~"))
 
     def _select_device(self, requested_device: str) -> str:
         if requested_device != "auto":
@@ -66,19 +71,23 @@ class ModelService:
         return "cpu"
 
     def _load_model(self) -> None:
-        if not self.model_dir.exists():
+        if self._is_local_model_source() and not Path(self.model_dir).exists():
             self.load_error = f"Model directory not found: {self.model_dir}"
             return
 
         try:
+            token = os.getenv("HF_TOKEN", "").strip() or None
+            auth_kwargs = {"token": token} if token else {}
             self.tokenizer = AutoTokenizer.from_pretrained(
-                str(self.model_dir),
+                self.model_dir,
                 trust_remote_code=True,
+                **auth_kwargs,
             )
             self.model = AutoModelForSequenceClassification.from_pretrained(
-                str(self.model_dir),
+                self.model_dir,
                 trust_remote_code=True,
                 low_cpu_mem_usage=False,
+                **auth_kwargs,
             )
             self.model.to(torch.device(self.device))
             self.model.eval()
@@ -110,8 +119,7 @@ class ModelService:
 
     def predict(self, sequence: str) -> PredictionResult:
         if not self.model_loaded or self.model is None or self.tokenizer is None:
-            reason = self.load_error or "model is not loaded"
-            raise RuntimeError(f"DNABERT-2 model is unavailable: {reason}")
+            raise RuntimeError("Model is not available. Please configure MODEL_DIR correctly.")
 
         cleaned_sequence = self.clean_sequence(sequence)
         model_sequence = self.crop_sequence(cleaned_sequence)

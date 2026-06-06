@@ -53,19 +53,26 @@ class Settings:
         if origin.strip()
     )
 
-    def resolved_model_dir(self) -> Path:
-        model_path = Path(self.model_dir).expanduser()
+    def resolved_model_source(self) -> str:
+        raw_source = self.model_dir.strip()
+        model_path = Path(raw_source).expanduser()
         if model_path.is_absolute():
-            return model_path
+            return str(model_path)
 
         candidates = [
             (_repo_root() / model_path).resolve(),
             (Path(__file__).resolve().parents[2] / model_path).resolve(),
+            (Path.cwd() / model_path).resolve(),
         ]
         for candidate in candidates:
             if candidate.exists():
-                return candidate
-        return candidates[0]
+                return str(candidate)
+
+        if raw_source.startswith(("./", "../", "~")):
+            return str(candidates[0])
+
+        # Non-local values such as username/model-repo are Hugging Face repo IDs.
+        return raw_source
 
     def validate(self) -> "Settings":
         if self.model_mode not in {"auto", "mock", "trained"}:

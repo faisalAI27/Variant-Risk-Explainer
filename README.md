@@ -1,3 +1,13 @@
+---
+title: Variant Risk Explainer
+emoji: 🧬
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Variant Risk Explainer
 
 Variant Risk Explainer is a full-stack AI-powered genomic variant analysis system. It uses a fine-tuned DNABERT-2 model to estimate whether a submitted DNA sequence looks more similar to benign/likely benign or pathogenic/likely pathogenic ClinVar examples.
@@ -27,7 +37,7 @@ Explanation Layer
 AI-Assisted Result
 ```
 
-The frontend sends a DNA sequence to `POST /analyze`. The backend cleans and crops the sequence, runs the DNABERT-2 classifier, applies the tuned threshold, then returns probabilities, a research-only label, and a cautious explanation.
+The frontend sends a DNA sequence to `POST /api/analyze` in the combined deployment. The backend cleans and crops the sequence, runs the DNABERT-2 classifier, applies the tuned threshold, then returns probabilities, a research-only label, and a cautious explanation.
 
 ## Model Training Summary
 
@@ -97,7 +107,23 @@ Frontend values live in `frontend/.env.local`:
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
+Leave `NEXT_PUBLIC_API_URL` empty when the frontend and backend are served from
+the same origin.
+
 Never commit `.env`, `.env.local`, API keys, datasets, or model weights.
+
+## Hugging Face Spaces
+
+This repository includes a Docker deployment that:
+
+1. builds the Next.js application as a static export
+2. copies the export into FastAPI
+3. serves the UI and API from port `7860`
+4. loads the model from either `models/final_model/` or a Hugging Face model repository
+
+See [docs/HUGGINGFACE_DEPLOYMENT.md](docs/HUGGINGFACE_DEPLOYMENT.md) for Space
+variables, secrets, model upload choices, local Docker testing, and push
+instructions.
 
 ## Data and Model Artifact Policy
 

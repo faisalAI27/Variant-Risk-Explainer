@@ -49,7 +49,7 @@ http://localhost:3000
 
 ## Environment
 
-Set the backend URL in `.env.local`:
+For separate local frontend/backend servers, set the backend URL in `.env.local`:
 
 ```bash
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
@@ -60,6 +60,16 @@ For a backend on port `8001`:
 ```bash
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8001
 ```
+
+For the Hugging Face Docker deployment, leave `NEXT_PUBLIC_API_URL` empty. The
+frontend then uses same-origin endpoints:
+
+```text
+/api/health
+/api/analyze
+```
+
+`npm run build` uses Next.js static export and creates `frontend/out/`.
 
 ## Analyze Flow
 

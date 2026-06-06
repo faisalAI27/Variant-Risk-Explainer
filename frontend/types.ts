@@ -31,6 +31,9 @@ export type HealthResponse = {
   model_dir: string;
   threshold: number;
   model_name: string;
+  explanation_mode: "openai" | "rule-based";
+  ai_explanation_enabled: boolean;
+  openai_configured: boolean;
   load_error?: string | null;
 };
 

@@ -1,6 +1,10 @@
 import type { AnalyzeRequest, AnalyzeResponse, HealthResponse } from "@/types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").trim().replace(/\/+$/, "");
+
+function apiUrl(localPath: string, sameOriginPath: string): string {
+  return API_BASE_URL ? `${API_BASE_URL}${localPath}` : sameOriginPath;
+}
 
 function formatApiError(payload: unknown, fallback: string): string {
   if (!payload || typeof payload !== "object") {
@@ -43,7 +47,7 @@ async function parseResponse<T>(response: Response, fallback: string): Promise<T
 export async function analyzeVariant(payload: AnalyzeRequest): Promise<AnalyzeResponse> {
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}/analyze`, {
+    response = await fetch(apiUrl("/analyze", "/api/analyze"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -60,7 +64,7 @@ export async function analyzeVariant(payload: AnalyzeRequest): Promise<AnalyzeRe
 export async function healthCheck(): Promise<HealthResponse> {
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}/health`, {
+    response = await fetch(apiUrl("/health", "/api/health"), {
       cache: "no-store"
     });
   } catch {

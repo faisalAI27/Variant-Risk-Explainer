@@ -10,6 +10,7 @@ http://localhost:8000
 
 ```http
 GET /health
+GET /api/health
 ```
 
 Example response:
@@ -22,6 +23,9 @@ Example response:
   "model_dir": "../training/training_model_files",
   "threshold": 0.16,
   "model_name": "DNABERT-2 ClinVar 20k",
+  "explanation_mode": "openai",
+  "ai_explanation_enabled": true,
+  "openai_configured": true,
   "load_error": null
 }
 ```
@@ -30,6 +34,7 @@ Example response:
 
 ```http
 POST /analyze
+POST /api/analyze
 Content-Type: application/json
 ```
 

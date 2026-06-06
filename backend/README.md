@@ -3,7 +3,8 @@
 FastAPI backend for the Variant Risk Explainer research demo.
 
 The backend loads a fine-tuned DNABERT-2 sequence-classification model once at
-startup and exposes `POST /analyze` for DNA sequence risk prediction.
+startup and exposes `POST /analyze` and `POST /api/analyze` for DNA sequence
+risk prediction.
 The response also includes an explanation generated from the model
 probabilities, selected threshold, and prediction label. By default this is
 rule-based. You can optionally enable an OpenAI-powered explanation paragraph.
@@ -33,10 +34,10 @@ training/training_model_files/
 ```
 
 That folder is intentionally ignored by Git because it contains large model
-files. Keep it locally, or place a copy at:
+files. For a self-contained Docker deployment, place a copy at:
 
 ```text
-backend/models/final_model/
+models/final_model/
 ```
 
 Configure the model path in `backend/.env`:
@@ -50,6 +51,14 @@ DEVICE=auto
 ```
 
 `DEVICE=auto` selects CUDA, then MPS, then CPU.
+
+`MODEL_DIR` may also be a Hugging Face model repository ID:
+
+```bash
+MODEL_DIR=your-username/variant-risk-dnabert2-20k
+```
+
+For a private model repository, provide `HF_TOKEN` as a secret.
 
 ## Optional OpenAI Explanation
 
@@ -86,8 +95,14 @@ http://localhost:8000/docs
 curl http://localhost:8000/health
 ```
 
-The response shows whether the model loaded, selected device, model directory,
-and threshold.
+The deployment alias is:
+
+```bash
+curl http://localhost:8000/api/health
+```
+
+The response shows whether the model loaded, selected device, model source,
+threshold, and explanation availability.
 
 ## Analyze Example
 
@@ -144,6 +159,13 @@ controlled by backend logic.
 
 The wording is intentionally cautious because it is derived only from the model
 output, not from clinical review.
+
+## Static Frontend
+
+The Docker build creates the Next.js static export and copies it into
+`backend/static/`. When that folder exists, FastAPI serves the frontend at `/`.
+API routes are registered before static file serving so `/api/health` and
+`/api/analyze` remain available.
 
 ## Safety Notice
 

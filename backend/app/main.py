@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import get_settings
 from app.schemas import AnalyzeRequest, AnalyzeResponse, HealthResponse
@@ -11,6 +14,7 @@ from app.services.model_service import ModelService
 
 settings = get_settings()
 model_service = ModelService(settings)
+static_dir = Path(__file__).resolve().parents[1] / "static"
 
 app = FastAPI(
     title="Variant Risk Explainer API",
@@ -27,17 +31,20 @@ app.add_middleware(
 )
 
 
-@app.get("/")
+@app.get("/api")
 def root() -> dict[str, str]:
     return {
         "message": "Variant Risk Explainer API",
         "model": settings.model_name,
-        "disclaimer": "Research/demo use only. Not for clinical diagnosis.",
+        "documentation": "/docs",
     }
 
 
+@app.get("/api/health", response_model=HealthResponse)
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
+    openai_configured = bool(settings.openai_api_key)
+    explanation_mode = "openai" if settings.use_openai_explanation and openai_configured else "rule-based"
     return HealthResponse(
         status="ok" if model_service.model_loaded else "degraded",
         model_loaded=model_service.model_loaded,
@@ -45,10 +52,14 @@ def health() -> HealthResponse:
         model_dir=str(model_service.model_dir),
         threshold=model_service.threshold,
         model_name=model_service.model_name,
+        explanation_mode=explanation_mode,
+        ai_explanation_enabled=settings.use_openai_explanation,
+        openai_configured=openai_configured,
         load_error=model_service.load_error,
     )
 
 
+@app.post("/api/analyze", response_model=AnalyzeResponse)
 @app.post("/analyze", response_model=AnalyzeResponse)
 def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
     try:
@@ -94,3 +105,16 @@ def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
         limitations=explanation["limitations"],
         disclaimer=prediction.disclaimer,
     )
+
+
+if static_dir.exists():
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
+else:
+
+    @app.get("/")
+    def local_root() -> dict[str, str]:
+        return {
+            "message": "Variant Risk Explainer API",
+            "documentation": "/docs",
+            "frontend": "Static frontend not built. Run the Next.js frontend separately for local development.",
+        }

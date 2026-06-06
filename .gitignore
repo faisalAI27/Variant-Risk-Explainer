@@ -29,6 +29,8 @@ ENV/
 node_modules/
 .next/
 out/
+frontend/.next/
+frontend/out/
 dist/
 build/
 npm-debug.log*
@@ -40,6 +42,8 @@ training/outputs/
 training/output/
 training/checkpoints/
 training/training_model_files/
+models/final_model/
+backend/static/
 backend/models/
 checkpoints/
 runs/

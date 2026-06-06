@@ -9,3 +9,4 @@ This folder contains project documentation for the Variant Risk Explainer demo.
 - `LIMITATIONS.md`: project limitations and safety boundaries.
 - `TESTING_CHECKLIST.md`: final pre-push and demo testing checklist.
 - `MODEL_ARTIFACTS.md`: local model artifact handling notes.
+- `HUGGINGFACE_DEPLOYMENT.md`: Docker Space deployment, model hosting, variables, and secrets.
