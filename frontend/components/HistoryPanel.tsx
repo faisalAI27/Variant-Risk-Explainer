@@ -14,14 +14,17 @@ export function HistoryPanel({ history, selectedId, onClear, onSelect }: History
   return (
     <aside className="historyPanel">
       <div className="panelHeader">
-        <h2>History</h2>
+        <div>
+          <p className="sectionEyebrow">Session</p>
+          <h2>Recent Analyses</h2>
+        </div>
         <button className="iconButton" disabled={history.length === 0} type="button" onClick={onClear} aria-label="Clear history">
           <Trash2 aria-hidden size={18} />
         </button>
       </div>
 
       {history.length === 0 ? (
-        <p className="emptyHistory">No saved analyses</p>
+        <p className="emptyHistory">Completed analyses will appear here.</p>
       ) : (
         <div className="historyList">
           {history.map((item) => (

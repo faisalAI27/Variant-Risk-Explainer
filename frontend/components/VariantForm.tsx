@@ -47,7 +47,10 @@ export function VariantForm({ isLoading, onAnalyze, onClearResult }: VariantForm
   return (
     <form className="toolPanel" onSubmit={handleSubmit}>
       <div className="panelHeader">
-        <h2>Analyze Sequence</h2>
+        <div>
+          <p className="sectionEyebrow">Sequence input</p>
+          <h2>Analyze Variant Sequence</h2>
+        </div>
         <span className="buildPill">GRCh38</span>
       </div>
 
@@ -91,7 +94,7 @@ export function VariantForm({ isLoading, onAnalyze, onClearResult }: VariantForm
         <textarea
           value={form.notes}
           onChange={(event) => updateField("notes", event.target.value)}
-          placeholder="Optional notes for this demo run"
+          placeholder="Optional context for this analysis"
           rows={3}
         />
       </label>
@@ -99,7 +102,7 @@ export function VariantForm({ isLoading, onAnalyze, onClearResult }: VariantForm
       <div className="buttonRow">
         <button className="primaryButton" disabled={isLoading} type="submit">
           {isLoading ? <Loader2 aria-hidden className="spin" size={18} /> : <Search aria-hidden size={18} />}
-          Analyze Variant
+          Analyze Sequence
         </button>
         <button className="secondaryButton" disabled={isLoading} type="button" onClick={handleClear}>
           <RotateCcw aria-hidden size={18} />

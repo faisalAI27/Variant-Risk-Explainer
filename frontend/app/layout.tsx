@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Variant Risk Explainer",
-  description: "Research-only GRCh38 variant risk explanation demo"
+  description: "AI-powered genomic sequence analysis for variant risk interpretation"
 };
 
 export default function RootLayout({

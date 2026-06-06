@@ -1,6 +1,6 @@
 # Variant Risk Explainer
 
-Variant Risk Explainer is a full-stack AI genomics research demo. It uses a fine-tuned DNABERT-2 model to estimate whether a submitted DNA sequence looks more similar to benign/likely benign or pathogenic/likely pathogenic ClinVar examples.
+Variant Risk Explainer is a full-stack AI-powered genomic variant analysis system. It uses a fine-tuned DNABERT-2 model to estimate whether a submitted DNA sequence looks more similar to benign/likely benign or pathogenic/likely pathogenic ClinVar examples.
 
 This project is for AI/ML research and education only. It is not a medical device, not a diagnostic system, and must not be used for clinical decisions.
 
@@ -8,7 +8,7 @@ This project is for AI/ML research and education only. It is not a medical devic
 
 - `training/`: ClinVar GRCh38 data preparation, DNABERT-2 training notebooks, local evaluation scripts.
 - `backend/`: FastAPI inference API with DNABERT-2 prediction and explanation services.
-- `frontend/`: Next.js demo UI with input form, backend status, result card, explanation, and history.
+- `frontend/`: Next.js analysis interface with input form, service status, result card, explanation, and history.
 - `docs/`: Architecture notes, API contract, model card, demo examples, limitations, and testing checklist.
 
 ## Architecture
@@ -24,7 +24,7 @@ DNABERT-2 Prediction Service
   ↓
 Explanation Layer
   ↓
-Research/Demo Result
+AI-Assisted Result
 ```
 
 The frontend sends a DNA sequence to `POST /analyze`. The backend cleans and crops the sequence, runs the DNABERT-2 classifier, applies the tuned threshold, then returns probabilities, a research-only label, and a cautious explanation.
@@ -50,7 +50,7 @@ The frontend sends a DNA sequence to `POST /analyze`. The backend cleans and cro
 | MCC | 0.1171 |
 | AUC ROC | 0.5928 |
 
-These metrics are limited and support demo use only, not clinical interpretation.
+These metrics are limited and support educational and research-oriented analysis only, not clinical interpretation.
 
 ## Run Backend
 
@@ -110,6 +110,6 @@ Large files are intentionally ignored by Git:
 
 Use local storage, Google Drive, or another private artifact store for trained models and datasets.
 
-## Demo Disclaimer
+## Responsible Use
 
-Predictions and explanations are experimental model outputs. They can be wrong, incomplete, biased by ClinVar labels, or invalid outside the training distribution. This project is intended only for AI/ML research demonstrations and must not be used for diagnosis, treatment, or medical decision-making.
+Predictions and explanations are experimental model outputs. They can be wrong, incomplete, biased by ClinVar labels, or invalid outside the training distribution. This project is intended for educational and research-oriented AI/ML analysis and must not be used for diagnosis, treatment, or medical decision-making.

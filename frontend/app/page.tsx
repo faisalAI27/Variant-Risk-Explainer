@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Dna, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { ResultCard } from "@/components/ResultCard";
@@ -74,14 +74,21 @@ export default function Home() {
   return (
     <main className="appShell">
       <header className="appHeader">
-        <div>
-          <p className="eyebrow">DNABERT-2 research demo</p>
+        <div className="brandLine">
+          <div className="brandMark" aria-hidden>
+            <Dna size={24} />
+          </div>
+          <p className="eyebrow">AI Genomics Platform</p>
+        </div>
+        <div className="heroCopy">
           <h1>Variant Risk Explainer</h1>
           <p className="subtitle">
-            A research/demo tool using DNABERT-2 to estimate whether a DNA variant sequence looks benign or pathogenic.
+            AI-powered genomic sequence analysis for variant risk interpretation.
+          </p>
+          <p className="heroDescription">
+            Enter a DNA sequence to receive a model-based variant risk assessment and explanation.
           </p>
         </div>
-        <p className="safetyBanner">Research only. Not for medical diagnosis.</p>
       </header>
 
       <section className="statusPanel" aria-label="Backend status">
@@ -89,11 +96,8 @@ export default function Home() {
           <>
             <CheckCircle2 aria-hidden size={20} />
             <div>
-              <strong>Backend connected</strong>
-              <span>
-                Model loaded: {health.model_loaded ? "yes" : "no"} · Device: {health.device} · Threshold:{" "}
-                {health.threshold.toFixed(2)}
-              </span>
+              <strong>Analysis service connected</strong>
+              <span>{health.model_loaded ? "Genomic analysis model is ready." : "Model is not currently available."}</span>
               {!health.model_loaded && health.load_error ? <span className="statusWarning">{health.load_error}</span> : null}
             </div>
           </>
@@ -101,7 +105,7 @@ export default function Home() {
           <>
             <AlertCircle aria-hidden size={20} />
             <div>
-              <strong>Backend unavailable</strong>
+              <strong>Analysis service unavailable</strong>
               <span>{healthError || "Backend is not running. Start FastAPI backend first."}</span>
             </div>
           </>
@@ -112,41 +116,29 @@ export default function Home() {
         <div className="mainColumn">
           <VariantForm isLoading={isLoading} onAnalyze={handleAnalyze} onClearResult={clearCurrentResult} />
           <ResultCard error={error} isLoading={isLoading} result={result} />
-          <section className="infoPanel">
-            <div className="panelHeader">
-              <h2>Model information</h2>
-              <Activity aria-hidden size={20} />
-            </div>
-            <dl className="modelStats">
-              <div>
-                <dt>Model</dt>
-                <dd>DNABERT-2 fine-tuned on 20k ClinVar alternate-sequence dataset</dd>
-              </div>
-              <div>
-                <dt>Test AUC</dt>
-                <dd>0.5928</dd>
-              </div>
-              <div>
-                <dt>Test F1</dt>
-                <dd>0.6280</dd>
-              </div>
-              <div>
-                <dt>Test MCC</dt>
-                <dd>0.1171</dd>
-              </div>
-              <div>
-                <dt>Threshold</dt>
-                <dd>0.16</dd>
-              </div>
-            </dl>
-            <p className="disclaimer">
-              This tool is for research/demo purposes only and is not a clinical diagnostic system.
-            </p>
-          </section>
         </div>
 
         <HistoryPanel history={history} selectedId={result?.id} onClear={() => setHistory([])} onSelect={setResult} />
       </section>
+
+      <footer className="appFooter">
+        <div className="noticeHeading">
+          <ShieldCheck aria-hidden size={18} />
+          <strong>Important notice</strong>
+        </div>
+        <p>
+          This system provides AI-assisted variant risk interpretation and is intended for educational and
+          research-oriented analysis. It does not replace clinical genetic testing or professional medical evaluation.
+        </p>
+        <details className="noticeDetails">
+          <summary>Review system limitations</summary>
+          <ul>
+            <li>Sequence patterns are evaluated without full clinical evidence or family history.</li>
+            <li>Population frequency and functional study evidence are not included.</li>
+            <li>Results should be reviewed alongside validated genetics resources and qualified professional guidance.</li>
+          </ul>
+        </details>
+      </footer>
     </main>
   );
 }

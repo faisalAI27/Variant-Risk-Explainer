@@ -1,6 +1,6 @@
 # Frontend
 
-Next.js frontend for the Variant Risk Explainer research demo.
+Next.js frontend for the Variant Risk Explainer AI-powered genomic variant analysis system.
 
 The app connects to the FastAPI backend, submits a DNA sequence to
 `POST /analyze`, shows the DNABERT-2 prediction result, and displays backend
@@ -8,7 +8,9 @@ health/model status. The result card also displays the backend's rule-based
 or optional OpenAI explanation, confidence level, recommendation, and
 limitations.
 
-This is for research/demo use only. It is not a clinical diagnostic system.
+The interface presents model-assisted analysis without making clinical claims.
+Responsible-use guidance is placed in the application footer and technical
+limitations remain available in the project documentation.
 
 ## Run Backend
 
@@ -65,11 +67,13 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8001
 2. Start Next.js.
 3. Confirm the page shows `Backend connected`.
 4. Enter a DNA sequence containing only `A`, `C`, `G`, `T`, or `N`.
-5. Click `Analyze Variant`.
+5. Click `Analyze Sequence`.
 
-The result card shows benign/pathogenic probabilities, threshold, model name,
-sequence length used after center cropping, a beginner-friendly explanation, and
-the explanation source.
+The main result card shows the overall assessment, risk category, benign and
+pathogenic likelihoods, confidence level, explanation, and recommendation.
+Model name, threshold, sequence length, prediction class, performance metrics,
+and explanation source are available in the collapsed `Technical details`
+section.
 
 The explanation is generated from the backend model output and threshold. It is
 not medical advice and is not a clinical interpretation. If the backend has
@@ -77,7 +81,7 @@ not medical advice and is not a clinical interpretation. If the backend has
 explanation paragraph. Do not put the OpenAI API key in the frontend; keep it in
 `backend/.env` only.
 
-## Safety Notice
+## Responsible Use
 
-The UI displays research-only disclaimers from the backend. Do not present model
-output as medical advice or diagnosis.
+The UI includes a professional notice explaining that AI-assisted interpretation
+does not replace clinical genetic testing or professional medical evaluation.
